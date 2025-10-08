@@ -1,0 +1,247 @@
+common.h
+
+#ifndef COMMON_H
+#define COMMON_H
+
+#include <iostream>
+#include <string>
+
+// 状态枚举
+enum class Status {
+	SUCCESS,
+	FAILURE,
+	DOOR_CLOSED,
+	DOOR_OPEN,
+	ELEPHANT_TOO_BIG
+};
+
+// 通用工具函数
+class Utils {
+public:
+	static void printMessage(const std::string& message);
+};
+
+#endif
+
+elephant.h
+
+#ifndef ELEPHANT_H
+#define ELEPHANT_H
+
+#include "common.h"
+#include <string>
+#include <iostream>
+class Elephant {
+private:
+	std::string name;
+	double weight;  // 重量(kg)
+	double height;  // 高度(m)
+
+public:
+	Elephant(const std::string& elephantName, double elephantWeight, double elephantHeight);
+
+	// Getter方法
+	std::string getName() const;
+	double getWeight() const;
+	double getHeight() const;
+
+	// 行为方法
+	void introduce() const;
+};
+
+#endif
+
+refrigerator.h
+
+#ifndef REFRIGERATOR_H
+#define REFRIGERATOR_H
+
+#include "common.h"
+#include "elephant.h"
+#include <iostream>
+class Refrigerator {
+private:
+	std::string brand;
+	double capacity;    // 容量(kg)
+	double doorHeight;  // 门高(m)
+	bool isDoorOpen;
+	Elephant* containedElephant;  // 冰箱里的大象
+
+public:
+	Refrigerator(const std::string& fridgeBrand, double fridgeCapacity, double fridgeDoorHeight);
+	~Refrigerator();
+
+	// 门操作
+	Status openDoor();
+	Status closeDoor();
+	bool checkDoor() const;
+
+	// 大象操作
+	Status putElephant(Elephant* elephant);
+	Status takeOutElephant();
+
+	// 状态显示
+	void displayStatus() const;
+};
+
+#endif
+
+elephant.cpp
+
+#include "elephant.h"
+
+Elephant::Elephant(const std::string& elephantName, double elephantWeight, double elephantHeight)
+	: name(elephantName), weight(elephantWeight), height(elephantHeight) {
+}
+
+std::string Elephant::getName() const {
+	return name;
+}
+
+double Elephant::getWeight() const {
+	return weight;
+}
+
+double Elephant::getHeight() const {
+	return height;
+}
+
+void Elephant::introduce() const {
+	std::cout << "我是大象" << name
+		<< "，体重" << weight << "kg，身高" << height << "米。" << std::endl;
+}
+
+refrigerator.cpp
+
+#include "refrigerator.h"
+#include <iostream>
+
+Refrigerator::Refrigerator(const std::string& fridgeBrand, double fridgeCapacity, double fridgeDoorHeight)
+	: brand(fridgeBrand), capacity(fridgeCapacity), doorHeight(fridgeDoorHeight),
+	isDoorOpen(false), containedElephant(nullptr) {
+}
+
+Refrigerator::~Refrigerator() {
+	if (containedElephant != nullptr) {
+		delete containedElephant;
+	}
+}
+
+Status Refrigerator::openDoor() {
+	if (isDoorOpen) {
+		std::cout << "冰箱门已经是开着的！" << std::endl;
+		return Status::DOOR_OPEN;
+	}
+	isDoorOpen = true;
+	std::cout << brand << "冰箱门已打开。" << std::endl;
+	return Status::SUCCESS;
+}
+
+Status Refrigerator::closeDoor() {
+	if (!isDoorOpen) {  // 修正：原来是 isDoorOpen，应该是 !isDoorOpen
+		std::cout << "冰箱门已经是关着的！" << std::endl;
+		return Status::DOOR_CLOSED;
+	}
+	isDoorOpen = false;  // 修正：原来是 true，应该是 false
+	std::cout << brand << "冰箱门已关闭。" << std::endl;
+	return Status::SUCCESS;
+}
+
+bool Refrigerator::checkDoor() const {
+	return isDoorOpen;
+}
+
+Status Refrigerator::putElephant(Elephant* elephant) {
+	if (!isDoorOpen) {
+		std::cout << "请先打开冰箱门！" << std::endl;
+		return Status::DOOR_CLOSED;
+	}
+
+	if (elephant->getWeight() > capacity) {
+		std::cout << "大象太重了，装不进冰箱！" << std::endl;
+		return Status::ELEPHANT_TOO_BIG;
+	}
+
+	if (elephant->getHeight() > doorHeight) {
+		std::cout << "大象太高了，进不了冰箱门！" << std::endl;
+		return Status::ELEPHANT_TOO_BIG;
+	}
+
+	containedElephant = elephant;
+	std::cout << "成功将大象" << elephant->getName() << "装进冰箱！" << std::endl;
+	return Status::SUCCESS;
+}
+
+Status Refrigerator::takeOutElephant() {
+	if (!isDoorOpen) {
+		std::cout << "请先打开冰箱门！" << std::endl;
+		return Status::DOOR_CLOSED;
+	}
+
+	if (containedElephant == nullptr) {
+		std::cout << "冰箱里没有大象！" << std::endl;
+		return Status::FAILURE;
+	}
+
+	std::cout << "成功将大象" << containedElephant->getName() << "从冰箱里取出来！" << std::endl;
+	containedElephant = nullptr;
+	return Status::SUCCESS;
+}
+
+void Refrigerator::displayStatus() const {
+	std::cout << "\n=== 冰箱状态 ===" << std::endl;
+	std::cout << "品牌: " << brand << std::endl;
+	std::cout << "容量: " << capacity << "kg" << std::endl;
+	std::cout << "门高: " << doorHeight << "米" << std::endl;
+	std::cout << "门状态: " << (isDoorOpen ? "打开" : "关闭") << std::endl;
+	std::cout << "内容物: ";
+	if (containedElephant != nullptr) {
+		std::cout << "大象" << containedElephant->getName();
+	}
+	else {
+		std::cout << "空";
+	}
+	std::cout << std::endl;
+}
+
+main.cpp
+
+#include "common.h"
+#include "elephant.h"
+#include "refrigerator.h"
+
+void demonstrateElephantInFridge() {
+	std::cout << "=== 大象装进冰箱演示程序 ===" << std::endl;
+
+	// 创建大象和冰箱
+	Elephant* elephant = new Elephant("壮壮", 3000, 2.5);
+	Refrigerator fridge("海尔", 5000, 3.0);
+
+	// 演示过程
+	elephant->introduce();
+	fridge.displayStatus();
+
+	std::cout << "\n--- 步骤1: 打开冰箱门 ---" << std::endl;
+	fridge.openDoor();
+
+	std::cout << "\n--- 步骤2: 把大象装进冰箱 ---" << std::endl;
+	Status result = fridge.putElephant(elephant);
+
+	if (result == Status::SUCCESS) {
+		std::cout << "\n--- 步骤3: 关闭冰箱门 ---" << std::endl;
+		fridge.closeDoor();
+	}
+
+	std::cout << "\n--- 最终状态 ---" << std::endl;
+	fridge.displayStatus();
+
+	// 清理
+	if (result != Status::SUCCESS) {
+		delete elephant;
+	}
+}
+
+int main() {
+	demonstrateElephantInFridge();
+	return 0;
+}
